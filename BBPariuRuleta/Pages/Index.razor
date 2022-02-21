@@ -1,0 +1,197 @@
+@page "/test"
+@using Microsoft.AspNetCore.Components
+@using ClassLibrary1
+
+<PageTitle>Sim</PageTitle>
+
+<EditForm OnSubmit="StartSimulare" Model="_simData">
+    <label>Bankroll</label>
+    <InputNumber @bind-Value="_simData.Bankroll"></InputNumber>
+    <label>Numar simulari</label>
+    <InputNumber @bind-Value="@_simData.TotalSpins"></InputNumber>
+    <label>R/N</label>
+    <InputCheckbox @bind-Value="_simData.RuleazaRosuNegru"></InputCheckbox>
+    <label>P/I</label>
+    <InputCheckbox @bind-Value="_simData.RuleazaParImpar"></InputCheckbox>
+    <label>H/L</label>
+            <InputCheckbox @bind-Value="_simData.RuleazaHighLow"></InputCheckbox>
+    <label>S0</label>
+    <InputCheckbox @bind-Value="_simData.StopLaZero"></InputCheckbox>
+    <button disabled="@calculeaza" type="submit" class="btn btn-primary">Start</button>
+</EditForm>
+
+
+@if (ruleta!=null)
+{
+    <p>Bankroll: @ruleta.Bankroll</p>
+    <p>Zerouri: @ruleta.ZeroCounter</p>
+
+    <div class="row">
+
+        <div class="col-3">
+            <div class="card shadow overflow-auto" style="max-height: 300px;">
+                <div class="card-header bg-danger text-white">
+
+                    <span class="h4 card-title">Rosu</span>
+
+                </div>
+                <div class="card-body">
+                    <p>Total rosu: @ruleta.TotalRosii</p>
+                    <ul class="list-group">
+                        @foreach (var str in ruleta.StreakRosii.OrderByDescending(s => s.Key))
+                        {
+                            <li class="list-group-item">
+                                @str.Key : @str.Value
+                            </li>
+                        }
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="col-3">
+            <div class="card shadow overflow-auto" style="max-height: 300px;">
+                <div class="card-header bg-dark text-white">
+
+                    <span class="h4 card-title">Negru</span>
+
+                </div>
+                <div class="card-body">
+                    <p>Total negru: @ruleta.TotalNegre</p>
+                    <ul class="list-group">
+                        @foreach (var str in ruleta.StreakNegre.OrderByDescending(s => s.Key))
+                        {
+                            <li class="list-group-item">
+                                @str.Key : @str.Value
+                            </li>
+                        }
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+        
+        <div class="col-3">
+                    <div class="card shadow overflow-auto" style="max-height: 300px;">
+                        <div class="card-header bg-success text-white">
+        
+                            <span class="h4 card-title">Par</span>
+        
+                        </div>
+                        <div class="card-body">
+                            <p>Total pare: @ruleta.TotalPare</p>
+                            <ul class="list-group">
+                                @foreach (var str in ruleta.StreakPare.OrderByDescending(s => s.Key))
+                                {
+                                    <li class="list-group-item">
+                                        @str.Key : @str.Value
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+        
+                    </div>
+                </div>
+        
+        <div class="col-3">
+            <div class="card shadow overflow-auto" style="max-height: 300px;">
+                <div class="card-header bg-info text-white">
+        
+                    <span class="h4 card-title">Impar</span>
+        
+                </div>
+                <div class="card-body">
+                    <p>Total impare: @ruleta.TotalImpare</p>
+                    <ul class="list-group">
+                        @foreach (var str in ruleta.StreakImpare.OrderByDescending(s => s.Key))
+                        {
+                            <li class="list-group-item">
+                                @str.Key : @str.Value
+                            </li>
+                        }
+                    </ul>
+                </div>
+        
+            </div>
+        </div>
+        <div class="col-3">
+                            <div class="card shadow overflow-auto" style="max-height: 300px;">
+                                <div class="card-header bg-success text-white">
+                
+                                    <span class="h4 card-title">Low 1-18</span>
+                
+                                </div>
+                                <div class="card-body">
+                                    <p>Total low: @ruleta.TotalLow</p>
+                                    <ul class="list-group">
+                                        @foreach (var str in ruleta.StreakLow.OrderByDescending(s => s.Key))
+                                        {
+                                            <li class="list-group-item">
+                                                @str.Key : @str.Value
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                
+                            </div>
+                        </div>
+                
+                        <div class="col-3">
+                            <div class="card shadow overflow-auto" style="max-height: 300px;">
+                                <div class="card-header bg-info text-white">
+                
+                                    <span class="h4 card-title">High 19-36</span>
+                
+                                </div>
+                                <div class="card-body">
+                                    <p>Total high: @ruleta.TotalHigh</p>
+                                    <ul class="list-group">
+                                        @foreach (var str in ruleta.StreakHigh.OrderByDescending(s => s.Key))
+                                        {
+                                            <li class="list-group-item">
+                                                @str.Key : @str.Value
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                
+                            </div>
+                        </div>
+
+    </div>
+}
+
+@code{
+    bool calculeaza;
+    Ruleta ruleta;
+    private Ruleta.SimData _simData = new Ruleta.SimData() { TotalSpins = 100000, Bankroll = 10000 };
+    async Task StartSimulare()
+    {
+        if (calculeaza) return;
+        calculeaza = true;
+
+        ruleta = new Ruleta(_simData);
+
+        var random = new Random();
+        try
+        {
+            for (int i = 0; i < _simData.TotalSpins; i++)
+            {
+                var numar = random.Next(0, 37);
+                await ruleta.ProceseazaNumar(numar);
+                // if (_simData.StopLaZero && bankroll <= 0) break;
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+
+        calculeaza = false;
+    }
+
+
+
+}

@@ -1,0 +1,83 @@
+@page "/"
+@using ClassLibrary1
+@using System.Data
+@using System.Text.RegularExpressions
+
+<EditForm class="form-group" OnSubmit="StartSimulare" Model="_simData">
+    <label>Bankroll: </label>
+    <InputNumber class="form-control" @bind-Value="_simData.Bankroll"></InputNumber>
+    <label>Rosie/Neagra: </label>
+    <InputCheckbox class="form-check-input " @bind-Value="_simData.RuleazaRosuNegru"></InputCheckbox>
+    <label>Par/Impar: </label>
+    <InputCheckbox class="form-check-input" @bind-Value="_simData.RuleazaParImpar"></InputCheckbox>
+    <label>High/Low: </label>
+    <InputCheckbox class="form-check-input" @bind-Value="_simData.RuleazaHighLow"></InputCheckbox>
+    <br>
+    <label>Numere(,): </label>
+    <InputText class="form-control" @bind-Value="@_simData.NumereAlese"></InputText>
+
+    <label>Pariuri: 100-100-200-300-500-800</label>
+    <br>
+    <br>
+    <button disabled="@calculeaza" type="submit" class="w-100 btn btn-primary">Start</button>
+</EditForm>
+
+
+@if (_ruleta != null)
+{
+    if (_ruleta.Bankroll > _simData.Bankroll)
+    {
+        rezultatClass = "text-success";
+    }
+    else if (_ruleta.Bankroll < _simData.Bankroll)
+    {
+        rezultatClass = "text-danger";
+    }
+    <div class="mt-3">
+        Bankroll:
+        <p class="fw-bold @rezultatClass">@_ruleta.Bankroll</p>
+    </div>
+}
+
+@code {
+
+    private Ruleta _ruleta;
+
+    private Ruleta.SimData _simData =
+        new ()
+        {
+            Bankroll = 10000,
+            RuleazaRosuNegru = true,
+            RuleazaHighLow = true,
+            RuleazaParImpar = true,
+            NumereAlese = "2,4,6,8,9"
+        };
+
+    bool calculeaza;
+    string rezultatClass = "";
+
+    private List<int> numereAlese = new List<int>();
+
+    private async Task StartSimulare()
+    {
+        calculeaza = true;
+        _ruleta = new Ruleta(_simData);
+
+        string[] numbers = Regex.Split(_simData.NumereAlese, @"\D+");
+        foreach (string value in numbers)
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                int i = int.Parse(value);
+    //numereAlese.Add(i);
+                if (i != null)
+                {
+                    await _ruleta.ProceseazaNumar(i);
+                }
+            }
+        }
+
+        calculeaza = false;
+    }
+
+}
