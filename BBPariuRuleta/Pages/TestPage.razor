@@ -1,4 +1,4 @@
-@page "/"
+@page "/testpage"
 @using ClassLibrary1
 @using System.Data
 @using System.Text.RegularExpressions
@@ -16,7 +16,8 @@
     <label>Numere(,): </label>
     <InputText class="form-control" @bind-Value="@_simData.NumereAlese"></InputText>
 
-    <label>Pariuri: 100-100-200-300-500-800</label>
+    <label>Pariuri: </label>
+        <InputText class="form-control" @bind-Value="_simData.PariuriStabilite"></InputText>
     <br>
     <br>
     <button disabled="@calculeaza" type="submit" class="w-100 btn btn-primary">Start</button>
@@ -50,7 +51,7 @@
             RuleazaRosuNegru = true,
             RuleazaHighLow = true,
             RuleazaParImpar = true,
-            NumereAlese = "2,4,6,8,9"
+            NumereAlese = "2,4,6,8,19"
         };
 
     bool calculeaza;

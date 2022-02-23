@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace ClassLibrary1;
 
 public static class IntExtensions
@@ -9,6 +11,14 @@ public static class IntExtensions
             pariu++;
             return pariu;
         }
+
+        return 0;
+    }
+
+    public static int ValoarePariuDinIndex(this string index)
+    {
+        string[] numbers = Regex.Split(index, @"\D+");
+        if (numbers[1] is not null) return Int32.Parse(numbers[1]);
 
         return 0;
     }
@@ -31,5 +41,12 @@ public static class DictExtensions
         }
 
         return dict;
+    }
+    
+    public static int GetVal(this Dictionary<string, int?> dict, string key)
+    {
+        if (!dict.ContainsKey(key)) return 0;
+
+        return dict[key]??0;
     }
 }

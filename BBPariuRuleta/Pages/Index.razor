@@ -1,176 +1,371 @@
-@page "/test"
+@page "/"
 @using Microsoft.AspNetCore.Components
 @using ClassLibrary1
 
 <PageTitle>Sim</PageTitle>
 
-<EditForm OnSubmit="StartSimulare" Model="_simData">
-    <label>Bankroll</label>
-    <InputNumber @bind-Value="_simData.Bankroll"></InputNumber>
-    <label>Numar simulari</label>
-    <InputNumber @bind-Value="@_simData.TotalSpins"></InputNumber>
-    <label>R/N</label>
-    <InputCheckbox @bind-Value="_simData.RuleazaRosuNegru"></InputCheckbox>
-    <label>P/I</label>
-    <InputCheckbox @bind-Value="_simData.RuleazaParImpar"></InputCheckbox>
-    <label>H/L</label>
-            <InputCheckbox @bind-Value="_simData.RuleazaHighLow"></InputCheckbox>
-    <label>S0</label>
-    <InputCheckbox @bind-Value="_simData.StopLaZero"></InputCheckbox>
-    <button disabled="@calculeaza" type="submit" class="btn btn-primary">Start</button>
+<EditForm class="form-group" OnSubmit="StartSimulare" Model="_simData">
+    <div class="row">
+        <div class="col-md-6">
+            <label>Bankroll: </label>
+            <InputNumber class="form-control" @bind-Value="_simData.Bankroll"></InputNumber>
+        </div>
+        <div class="col-md-6">
+            <label>Numar spinuri</label>
+            <InputNumber class="form-control" @bind-Value="@_simData.TotalSpins"></InputNumber>
+        </div>
+    </div>
+
+    <div class="row mt-2">
+        <div class="col-md-3">
+            <div class="row">
+                <div class="col-6">
+                    <label>Rosie/Neagra: </label>
+                    <InputCheckbox class="form-check-input " @bind-Value="_simData.RuleazaRosuNegru"></InputCheckbox>
+                </div>
+                <div class="col-6">
+                    <InputNumber class="form-control num" @bind-Value="@_simData.PariazaRosuDupaCateNegre"></InputNumber>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="row">
+                <div class="col-6">
+                    <label>Par/Impar: </label>
+                    <InputCheckbox class="form-check-input" @bind-Value="_simData.RuleazaParImpar"></InputCheckbox>
+                </div>
+                <div class="col-6">
+                    <InputNumber class="form-control num" @bind-Value="@_simData.PariazaParDupaCateImpare"></InputNumber>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="row">
+                <div class="col-6">
+                    <label>High/Low: </label>
+                    <InputCheckbox class="form-check-input" @bind-Value="_simData.RuleazaHighLow"></InputCheckbox>
+                </div>
+                <div class="col-6">
+                    <InputNumber class="form-control num" @bind-Value="@_simData.PariazaHighDupaCateLow"></InputNumber>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="row">
+                <div class="col-6">
+                    <label>Duzine: </label>
+                                <InputCheckbox class="form-check-input" @bind-Value="_simData.RuleazaDuzine"></InputCheckbox>
+                </div>
+                <div class="col-6">
+                    <InputNumber class="form-control num" @bind-Value="@_simData.PariazaDuzinaDupaCateLipsa"></InputNumber>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    <label>Pariuri: </label>
+    <InputText class="form-control" @bind-Value="_simData.PariuriStabilite"></InputText>
+    <br>
+    <br>
+    <button disabled="@calculeaza" type="submit" class="w-100 btn btn-primary">Start</button>
 </EditForm>
 
 
-@if (ruleta!=null)
+@if (ruleta != null)
 {
-    <p>Bankroll: @ruleta.Bankroll</p>
-    <p>Zerouri: @ruleta.ZeroCounter</p>
+    if (ruleta.Bankroll > _simData.Bankroll)
+    {
+        rezultatCss = "text-success";
+    }
+    else if (ruleta.Bankroll < _simData.Bankroll)
+    {
+        rezultatCss = "text-danger";
+    }
+    <div class="mt-3">
+        <p>
+            Bankroll:
+            <span class="fw-bold @rezultatCss">
+                @ruleta.Bankroll $
+            </span>
+
+        </p>
+
+    </div>
+
+    <div class="alert alert-success">
+        Zerouri: @ruleta.ZeroCounter
+        *** Pariuri prinse: @ruleta.counterPariuriPrinseDeZero
+        *** Valoare pariuri: @ruleta.valoarePariuriPrinseDeZero $
+
+
+    </div>
+
+    <div class="row">
+        @{
+            List<string> keys = new List<string>();
+            keys.AddRange(ruleta.PariuriCastigatoare.Keys);
+            keys.AddRange(ruleta.PariuriPierdute.Keys);
+            keys.AddRange(ruleta.PariuriPierdutePeZero.Keys);
+            foreach (var index in keys.Distinct().OrderBy(k => k))
+            {
+                <div class="col-12 col-lg-3 col-sm-6 ">
+                    <div class="alert alert-info">
+                        @index:
+                        <span class="text-success">
+                            @(ruleta.PariuriCastigatoare.GetVal(index))
+                        </span>
+                        -
+                        <span class="text-danger">
+                            @(ruleta.PariuriPierdute.GetVal(index) + ruleta.PariuriPierdutePeZero.GetVal(index))(@ruleta.PariuriPierdutePeZero.GetVal(index))
+                        </span>
+                        <span class="float-end">
+                            @(index.ValoarePariuDinIndex() * (ruleta.PariuriCastigatoare.GetVal(index) - ruleta.PariuriPierdute.GetVal(index) - ruleta.PariuriPierdutePeZero.GetVal(index))) $
+                        </span>
+                    </div>
+                </div>
+            }
+        }
+    </div>
 
     <div class="row">
 
-        <div class="col-3">
-            <div class="card shadow overflow-auto" style="max-height: 300px;">
+    @if (_simData.RuleazaRosuNegru)
+    {
+        <div class="col-12 col-lg-3 col-sm-6 mb-3">
+            <div class="card shadow " style="height: 250px;">
                 <div class="card-header bg-danger text-white">
 
                     <span class="h4 card-title">Rosu</span>
-
+                    <span class="float-end">Total rosii: @ruleta.TotalRosii</span>
                 </div>
-                <div class="card-body">
-                    <p>Total rosu: @ruleta.TotalRosii</p>
-                    <ul class="list-group">
+                <div class="card-body overflow-auto">
+                    <p>Serii</p>
+                    <div class="d-flex flex-wrap">
                         @foreach (var str in ruleta.StreakRosii.OrderByDescending(s => s.Key))
                         {
-                            <li class="list-group-item">
+                            <span class="badge bg-info m-1">
                                 @str.Key : @str.Value
-                            </li>
+                            </span>
                         }
-                    </ul>
+                    </div>
                 </div>
 
             </div>
         </div>
 
-        <div class="col-3">
-            <div class="card shadow overflow-auto" style="max-height: 300px;">
+        <div class="col-lg-3 col-sm-6 mb-3">
+            <div class="card shadow " style="height: 250px;">
                 <div class="card-header bg-dark text-white">
 
                     <span class="h4 card-title">Negru</span>
-
+                    <span class="float-end">Total negre: @ruleta.TotalNegre</span>
                 </div>
-                <div class="card-body">
-                    <p>Total negru: @ruleta.TotalNegre</p>
-                    <ul class="list-group">
+                <div class="card-body overflow-auto">
+                    <p>Serii</p>
+
+                    <div class="d-flex flex-wrap">
                         @foreach (var str in ruleta.StreakNegre.OrderByDescending(s => s.Key))
                         {
-                            <li class="list-group-item">
+                            <span class="badge bg-info m-1">
                                 @str.Key : @str.Value
-                            </li>
+                            </span>
                         }
-                    </ul>
+                    </div>
                 </div>
 
             </div>
         </div>
-        
-        <div class="col-3">
-                    <div class="card shadow overflow-auto" style="max-height: 300px;">
-                        <div class="card-header bg-success text-white">
-        
-                            <span class="h4 card-title">Par</span>
-        
-                        </div>
-                        <div class="card-body">
-                            <p>Total pare: @ruleta.TotalPare</p>
-                            <ul class="list-group">
-                                @foreach (var str in ruleta.StreakPare.OrderByDescending(s => s.Key))
-                                {
-                                    <li class="list-group-item">
-                                        @str.Key : @str.Value
-                                    </li>
-                                }
-                            </ul>
-                        </div>
-        
+    }
+
+    @if (_simData.RuleazaParImpar)
+    {
+        <div class="col-lg-3 col-sm-6 mb-3">
+            <div class="card shadow " style="height: 250px;">
+                <div class="card-header bg-success text-white">
+
+                    <span class="h4 card-title">Par</span>
+                    <span class="float-end">Total pare: @ruleta.TotalPare</span>
+                </div>
+                <div class="card-body overflow-auto">
+
+                    <p>Serii</p>
+
+                    <div class="d-flex flex-wrap">
+                        @foreach (var str in ruleta.StreakPare.OrderByDescending(s => s.Key))
+                        {
+                            <span class="badge bg-info m-1">
+                                @str.Key : @str.Value
+                            </span>
+                        }
                     </div>
                 </div>
-        
-        <div class="col-3">
-            <div class="card shadow overflow-auto" style="max-height: 300px;">
-                <div class="card-header bg-info text-white">
-        
-                    <span class="h4 card-title">Impar</span>
-        
-                </div>
-                <div class="card-body">
-                    <p>Total impare: @ruleta.TotalImpare</p>
-                    <ul class="list-group">
-                        @foreach (var str in ruleta.StreakImpare.OrderByDescending(s => s.Key))
-                        {
-                            <li class="list-group-item">
-                                @str.Key : @str.Value
-                            </li>
-                        }
-                    </ul>
-                </div>
-        
+
             </div>
         </div>
-        <div class="col-3">
-                            <div class="card shadow overflow-auto" style="max-height: 300px;">
-                                <div class="card-header bg-success text-white">
-                
-                                    <span class="h4 card-title">Low 1-18</span>
-                
-                                </div>
-                                <div class="card-body">
-                                    <p>Total low: @ruleta.TotalLow</p>
-                                    <ul class="list-group">
-                                        @foreach (var str in ruleta.StreakLow.OrderByDescending(s => s.Key))
-                                        {
-                                            <li class="list-group-item">
-                                                @str.Key : @str.Value
-                                            </li>
-                                        }
-                                    </ul>
-                                </div>
-                
-                            </div>
-                        </div>
-                
-                        <div class="col-3">
-                            <div class="card shadow overflow-auto" style="max-height: 300px;">
-                                <div class="card-header bg-info text-white">
-                
-                                    <span class="h4 card-title">High 19-36</span>
-                
-                                </div>
-                                <div class="card-body">
-                                    <p>Total high: @ruleta.TotalHigh</p>
-                                    <ul class="list-group">
-                                        @foreach (var str in ruleta.StreakHigh.OrderByDescending(s => s.Key))
-                                        {
-                                            <li class="list-group-item">
-                                                @str.Key : @str.Value
-                                            </li>
-                                        }
-                                    </ul>
-                                </div>
-                
-                            </div>
-                        </div>
+
+        <div class="col-lg-3 col-sm-6 mb-3">
+            <div class="card shadow overflow-auto" style="height: 250px;">
+                <div class="card-header bg-info text-white">
+
+                    <span class="h4 card-title">Impar</span>
+                    <span class="float-end">Total impare: @ruleta.TotalImpare</span>
+                </div>
+                <div class="card-body">
+                    <p>Serii</p>
+
+                    <div class="d-flex flex-wrap">
+                        @foreach (var str in ruleta.StreakImpare.OrderByDescending(s => s.Key))
+                        {
+                            <span class="badge bg-info m-1">
+                                @str.Key : @str.Value
+                            </span>
+                        }
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    }
+
+    @if (_simData.RuleazaHighLow)
+    {
+        <div class="col-lg-3 col-sm-6 mb-3">
+            <div class="card shadow " style="height: 250px;">
+                <div class="card-header bg-success text-white">
+
+                    <span class="h4 card-title">Low 1-18</span>
+                    <span class="float-end">Total low: @ruleta.TotalLow</span>
+                </div>
+                <div class="card-body overflow-auto">
+                    <p>Serii</p>
+
+                    <div class="d-flex flex-wrap">
+                        @foreach (var str in ruleta.StreakLow.OrderByDescending(s => s.Key))
+                        {
+                            <span class="badge bg-info m-1">
+                                @str.Key : @str.Value
+                            </span>
+                        }
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-sm-6 mb-3">
+            <div class="card shadow " style="height: 250px;">
+                <div class="card-header bg-info text-white">
+
+                    <span class="h4 card-title">High 19-36</span>
+                    <span class="float-end">Total high: @ruleta.TotalHigh</span>
+                </div>
+                <div class="card-body overflow-auto">
+                    <p>Serii</p>
+
+                    <div class="d-flex flex-wrap">
+                        @foreach (var str in ruleta.StreakHigh.OrderByDescending(s => s.Key))
+                        {
+                            <span class="badge bg-info m-1">
+                                @str.Key : @str.Value
+                            </span>
+                        }
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    }
+
+    @if (_simData.RuleazaDuzine)
+    {
+        <div class="col-lg-2 col-sm-4 mb-3">
+            <div class="card shadow " style="height: 250px;">
+                <div class="card-header bg-secondary text-white">
+
+                    <span class="h4 card-title">D1</span>
+                    <span class="float-end">Total D1: @ruleta.TotalD1</span>
+                </div>
+                <div class="card-body overflow-auto">
+                    <p>Serii</p>
+
+                    <div class="d-flex flex-wrap">
+                        @foreach (var str in ruleta.StreakD1.OrderByDescending(s => s.Key))
+                        {
+                            <span class="badge bg-info m-1">
+                                @str.Key : @str.Value
+                            </span>
+                        }
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-lg-2 col-sm-4 mb-3">
+            <div class="card shadow " style="height: 250px;">
+                <div class="card-header bg-info text-white">
+
+                    <span class="h4 card-title">D2</span>
+                    <span class="float-end">Total D2: @ruleta.TotalD2</span>
+                </div>
+                <div class="card-body overflow-auto">
+                    <p>Serii</p>
+
+                    <div class="d-flex flex-wrap">
+                        @foreach (var str in ruleta.StreakD2.OrderByDescending(s => s.Key))
+                        {
+                            <span class="badge bg-info m-1">
+                                @str.Key : @str.Value
+                            </span>
+                        }
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-lg-2 col-sm-4 mb-3">
+            <div class="card shadow " style="height: 250px;">
+                <div class="card-header bg-warning text-white">
+
+                    <span class="h4 card-title">D3</span>
+                    <span class="float-end">Total D3: @ruleta.TotalD3</span>
+                </div>
+                <div class="card-body overflow-auto">
+                    <p>Serii</p>
+
+                    <div class="d-flex flex-wrap">
+                        @foreach (var str in ruleta.StreakD3.OrderByDescending(s => s.Key))
+                        {
+                            <span class="badge bg-info m-1">
+                                @str.Key : @str.Value
+                            </span>
+                        }
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    }
 
     </div>
 }
 
 @code{
     bool calculeaza;
+    string rezultatCss = "";
     Ruleta ruleta;
-    private Ruleta.SimData _simData = new Ruleta.SimData() { TotalSpins = 100000, Bankroll = 10000 };
+
+    private Ruleta.SimData _simData = new()
+    {
+        TotalSpins = 100000,
+        Bankroll = 10000,
+        PariuriStabilite = "100,100,200,300,500,800"
+    };
+
     async Task StartSimulare()
     {
         if (calculeaza) return;
         calculeaza = true;
-//
+
         ruleta = new Ruleta(_simData);
 
         var random = new Random();
@@ -180,7 +375,6 @@
             {
                 var numar = random.Next(0, 37);
                 await ruleta.ProceseazaNumar(numar);
-                // if (_simData.StopLaZero && bankroll <= 0) break;
             }
         }
         catch (Exception e)
